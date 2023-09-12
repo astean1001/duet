@@ -3,8 +3,8 @@ open Vocab
 open Exprs
 
 let z3_solver_path = "z3"
-let temp_smt_file = "tmp.smt"
-let temp_result_file = "tmp.out"
+let temp_smt_file = "duet_z3_tmp.smt"
+let temp_result_file = "duet_z3_tmp.out"
 
 let rec string_of_sexp sexp = 
 	match sexp with
@@ -107,15 +107,15 @@ let readSMTResult file =
     		)
 		with _ ->
 			let err_id = Random.int 65532 in 
-			let err_filename = Printf.sprintf "err_%d_%s" err_id temp_smt_file in 
-			let _ = Sys.rename temp_smt_file err_filename in
+			let err_filename = Printf.sprintf "err_%d_%s" err_id (!Options.runid ^ temp_smt_file) in 
+			let _ = Sys.rename (!Options.runid ^ temp_smt_file) err_filename in
 			failwith (Printf.sprintf "WARNING: Errors in the SMT formula! (see %s)\n" err_filename) 
 				
 let solve smt_str =
-	let _ = write_lines [smt_str] temp_smt_file in 
-  let result = Sys.command (z3_solver_path ^ " -smt2 " ^ temp_smt_file ^
-                       "  > " ^ temp_result_file ) in
+	let _ = write_lines [smt_str] (!Options.runid ^ temp_smt_file) in 
+  let result = Sys.command (z3_solver_path ^ " -smt2 " ^ (!Options.runid ^ temp_smt_file) ^
+                       "  > " ^ (!Options.runid ^ temp_result_file) ) in
   if (result = 127) then 
 		failwith "Failed to run Z3. Check out if Z3 is on the working path."
 	else 	 
-		readSMTResult temp_result_file
+		readSMTResult (!Options.runid ^ temp_result_file)
